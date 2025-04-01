@@ -8,9 +8,9 @@ import (
 
 func main() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", api.Home)
 	mux.HandleFunc("/shorten", api.Shorten)
-
+	mux.HandleFunc("/{shortURL}", api.Redirect)
+	mux.HandleFunc("/", api.Home)
 	server := &http.Server{
 		Addr:    ":8080",
 		Handler: mux,
