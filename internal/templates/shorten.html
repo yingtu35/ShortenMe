@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShortenMe</title>
+</head>
+<body>
+  <h1>ShortenMe - URL Shortener</h1>
+  <h2>Your shortened URL is ready!</h2>
+  
+  <div class="url-container">
+    <input id="short-url" type="text" value="{{.ShortURL}}" readonly>
+    <button id="copy-button" class="button copy-button" onclick="copyURL()">Copy URL</button>
+    <a href="{{.ShortURL}}" target="_blank" class="button visit-button">Visit URL</a>
+  </div>
+  <p>Original URL: <a href="{{.OriginalURL}}" target="_blank">{{.OriginalURL}}</a></p>
+
+  <p>Shorten another URL <a href="/">here</a></p>
+  
+
+  <script>
+    function copyURL() {
+      const urlField = document.querySelector('#short-url');
+      urlField.select();
+      document.execCommand('copy');
+      urlField.focus();
+      // change button text to "Copied!"
+      const copyButton = document.querySelector('#copy-button');
+      copyButton.textContent = 'Copied!';
+      setTimeout(() => {
+        copyButton.textContent = 'Copy URL';
+      }, 2000);
+    }
+  </script>
+</body>
+</html>
