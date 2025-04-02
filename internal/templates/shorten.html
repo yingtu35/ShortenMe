@@ -12,8 +12,10 @@
   
   <div class="url-container">
     <input id="short-url" type="text" value="{{.ShortURL}}" readonly>
-    <button id="copy-button" class="button copy-button" onclick="copyURL()">Copy URL</button>
-    <a href="{{.ShortURL}}" target="_blank" class="button visit-button">Visit URL</a>
+    <div>
+      <button id="copy-button" class="button copy-button" onclick="copyURL()">Copy URL</button>
+      <a href="{{.ShortURL}}" target="_blank" class="button visit-button">Visit URL</a>
+    </div>
   </div>
   <p>Original URL: <a href="{{.OriginalURL}}" target="_blank">{{.OriginalURL}}</a></p>
 

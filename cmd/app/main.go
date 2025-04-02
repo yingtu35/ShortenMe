@@ -6,6 +6,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/yingtu35/ShortenMe/internal/api"
+	"github.com/yingtu35/ShortenMe/internal/config"
 	"github.com/yingtu35/ShortenMe/internal/store"
 )
 
@@ -16,6 +17,8 @@ func main() {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
 
+	config := config.LoadConfig()
+
 	// Create Redis store
 	redisStore, err := store.NewRedisStore()
 	if err != nil {
@@ -24,7 +27,7 @@ func main() {
 	defer redisStore.Close()
 
 	// Create handler with store
-	handler := api.NewHandler(redisStore)
+	handler := api.NewHandler(redisStore, *config)
 
 	// Set up routes
 	mux := http.NewServeMux()
@@ -46,10 +49,10 @@ func main() {
 	mux.HandleFunc("/", handler.Home)
 
 	server := &http.Server{
-		Addr:    ":8080",
+		Addr:    ":" + config.Port,
 		Handler: mux,
 	}
 
-	log.Println("Starting server on port 8080")
+	log.Println("Starting server on port " + config.Port)
 	server.ListenAndServe()
 }

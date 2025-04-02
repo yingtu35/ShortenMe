@@ -5,15 +5,17 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/yingtu35/ShortenMe/internal/config"
 	"github.com/yingtu35/ShortenMe/internal/store"
 )
 
 type Handler struct {
-	store store.Store
+	store  store.Store
+	config config.Config
 }
 
-func NewHandler(store store.Store) *Handler {
-	return &Handler{store: store}
+func NewHandler(store store.Store, config config.Config) *Handler {
+	return &Handler{store: store, config: config}
 }
 
 type ShortenedURL struct {
@@ -95,7 +97,7 @@ func (h *Handler) Redirect(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) URLClickCounts(w http.ResponseWriter, r *http.Request) {
 	fullShortURL := r.FormValue("shortURL")
-	shortURL := strings.TrimPrefix(fullShortURL, "http://localhost:8080/")
+	shortURL := strings.TrimPrefix(fullShortURL, h.config.BaseURL+"/")
 	if shortURL == "" {
 		http.Error(w, "Short URL is required", http.StatusBadRequest)
 		return

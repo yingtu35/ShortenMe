@@ -80,7 +80,7 @@ func (s *RedisStore) CreateShortURL(originalURL string) (string, error) {
 		return "", fmt.Errorf("failed to store URL: %w", err)
 	}
 
-	fullShortURL := "http://localhost:8080/" + shortURL
+	fullShortURL := os.Getenv("SHORTENME_URL") + "/" + shortURL
 
 	return fullShortURL, nil
 }
