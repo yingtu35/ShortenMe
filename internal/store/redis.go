@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -19,11 +20,19 @@ type RedisStore struct {
 	client *redis.Client
 }
 
-func NewRedisStore(addr string) (*RedisStore, error) {
+func NewRedisStore() (*RedisStore, error) {
+	addr := os.Getenv("REDIS_ADDR")
+	username := os.Getenv("REDIS_USERNAME")
+	password := os.Getenv("REDIS_PASSWORD")
+
+	if addr == "" || username == "" || password == "" {
+		return nil, fmt.Errorf("missing required Redis environment variables")
+	}
+
 	client := redis.NewClient(&redis.Options{
-		Addr:     "redis-10241.c285.us-west-2-2.ec2.redns.redis-cloud.com:10241",
-		Username: "default",
-		Password: "arvJiZrK810ujeTbaRY1UHx77B8Z8Wld",
+		Addr:     addr,
+		Username: username,
+		Password: password,
 		DB:       0,
 	})
 

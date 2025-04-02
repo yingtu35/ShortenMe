@@ -4,13 +4,20 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/joho/godotenv"
 	"github.com/yingtu35/ShortenMe/internal/api"
 	"github.com/yingtu35/ShortenMe/internal/store"
 )
 
 func main() {
+	// Load environment variables
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+	}
+
 	// Create Redis store
-	redisStore, err := store.NewRedisStore("redis-10241.c285.us-west-2-2.ec2.redns.redis-cloud.com:10241")
+	redisStore, err := store.NewRedisStore()
 	if err != nil {
 		log.Fatalf("Failed to create Redis store: %v", err)
 	}
