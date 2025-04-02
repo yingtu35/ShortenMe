@@ -28,8 +28,20 @@ func main() {
 
 	// Set up routes
 	mux := http.NewServeMux()
+
+	// Serve static files
+	fs := http.FileServer(http.Dir("internal/templates"))
+	mux.Handle("/static/", http.StripPrefix("/static/", fs))
+
+	// API routes
 	mux.HandleFunc("/shorten", handler.Shorten)
 	mux.HandleFunc("/click-counts", handler.URLClickCounts)
+
+	// Static pages
+	mux.HandleFunc("/terms", api.ServeTerms)
+	mux.HandleFunc("/privacy", api.ServePrivacy)
+
+	// This should be the last route as it catches all other paths
 	mux.HandleFunc("/{shortURL}", handler.Redirect)
 	mux.HandleFunc("/", handler.Home)
 

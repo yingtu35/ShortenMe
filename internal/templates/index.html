@@ -4,18 +4,24 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ShortenMe</title>
+  <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
   <h1>ShortenMe</h1>
   <h2>URL Shortener</h2>
   <form action="/shorten" method="post">
     <input type="url" name="url" placeholder="Enter your URL here" required>
-    <button type="submit">Shorten Me!</button>
+    <button type="submit" class="button">Shorten Me!</button>
   </form>
   <h2>URL Click Counts</h2>
   <form action="/click-counts" method="get">
     <input type="url" name="shortURL" placeholder="Enter your short URL here" required>
-    <button type="submit">Get Click Counts</button>
+    <button type="submit" class="button">Get Click Counts</button>
   </form>
+
+  <footer>
+    <p>&copy; 2025 ShortenMe | Created by <a href="https://github.com/yingtu35" target="_blank">Ying Tu</a></p>
+    <p><a href="/terms">Terms of Service</a> | <a href="/privacy">Privacy Policy</a></p>
+  </footer>
 </body>
 </html>

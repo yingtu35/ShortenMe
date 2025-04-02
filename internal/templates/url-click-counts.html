@@ -4,12 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ShortenMe</title>
+  <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-  <h1>ShortenMe - URL Click Counts</h1>
+  <h1>ShortenMe</h1>
+  <h2>URL Click Counts</h2>
   <p>Here are the click counts for the short URL:</p>
   <a href="{{.ShortURL}}" target="_blank" class="button visit-button">{{.ShortURL}}</a>
   <p>Click Count: {{.ClickCount}}</p>
-  <p>Shorten another URL <a href="/">here</a></p>
+  <p>Shorten another URL <a href="/" class="button">here</a></p>
+
+  <footer>
+    <p>&copy; 2025 ShortenMe | Created by <a href="https://github.com/yingtu35" target="_blank">Ying Tu</a></p>
+    <p><a href="/terms">Terms of Service</a> | <a href="/privacy">Privacy Policy</a></p>
+  </footer>
 </body>
 </html>

@@ -4,9 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ShortenMe</title>
+  <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-  <h1>ShortenMe - URL Shortener</h1>
+  <h1>ShortenMe</h1>
   <h2>Your shortened URL is ready!</h2>
   
   <div class="url-container">
@@ -16,8 +17,12 @@
   </div>
   <p>Original URL: <a href="{{.OriginalURL}}" target="_blank">{{.OriginalURL}}</a></p>
 
-  <p>Shorten another URL <a href="/">here</a></p>
-  
+  <p>Shorten another URL <a href="/" class="button">here</a></p>
+
+  <footer>
+    <p>&copy; 2025 ShortenMe | Created by <a href="https://github.com/yingtu35" target="_blank">Ying Tu</a></p>
+    <p><a href="/terms">Terms of Service</a> | <a href="/privacy">Privacy Policy</a></p>
+  </footer>
 
   <script>
     function copyURL() {
