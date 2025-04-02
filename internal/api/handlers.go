@@ -3,14 +3,30 @@ package api
 import (
 	"html/template"
 	"net/http"
+	"strings"
+
+	"github.com/yingtu35/ShortenMe/internal/store"
 )
+
+type Handler struct {
+	store store.Store
+}
+
+func NewHandler(store store.Store) *Handler {
+	return &Handler{store: store}
+}
 
 type ShortenedURL struct {
 	OriginalURL string
 	ShortURL    string
 }
 
-func Home(w http.ResponseWriter, r *http.Request) {
+type URLClickCounts struct {
+	ShortURL   string
+	ClickCount int64
+}
+
+func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(template.ParseFiles("internal/templates/index.html"))
 
 	err := tmpl.Execute(w, nil)
@@ -20,7 +36,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Shorten(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Shorten(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -32,43 +48,83 @@ func Shorten(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shortURL := generateShortURL(url)
+	shortURL, err := h.store.CreateShortURL(url)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	ShortenedURL := ShortenedURL{
+	shortenedURL := ShortenedURL{
 		OriginalURL: url,
 		ShortURL:    shortURL,
 	}
 
 	tmpl := template.Must(template.ParseFiles("internal/templates/shorten.html"))
 
-	err := tmpl.Execute(w, ShortenedURL)
+	err = tmpl.Execute(w, shortenedURL)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
 
-func Redirect(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Redirect(w http.ResponseWriter, r *http.Request) {
 	shortURL := r.PathValue("shortURL")
 	if shortURL == "" {
 		http.Error(w, "Short URL is required", http.StatusBadRequest)
 		return
 	}
 
-	originalURL := getOriginalURL(shortURL)
+	originalURL, err := h.store.GetOriginalURL(shortURL)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	if originalURL == "" {
-		http.Error(w, "Short URL not found", http.StatusNotFound)
+		tmpl := template.Must(template.ParseFiles("internal/templates/not-found.html"))
+		err = tmpl.Execute(w, nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 
 	http.Redirect(w, r, originalURL, http.StatusFound)
 }
 
-// Create a dummy function to generate short URLs
-func generateShortURL(url string) string {
-	return "http://localhost:8080/" + "123"
-}
+func (h *Handler) URLClickCounts(w http.ResponseWriter, r *http.Request) {
+	fullShortURL := r.FormValue("shortURL")
+	shortURL := strings.TrimPrefix(fullShortURL, "http://localhost:8080/")
+	if shortURL == "" {
+		http.Error(w, "Short URL is required", http.StatusBadRequest)
+		return
+	}
 
-func getOriginalURL(shortURL string) string {
-	return "http://localhost:8080/"
+	clickCount, err := h.store.GetClickCount(shortURL)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if clickCount == -1 {
+		tmpl := template.Must(template.ParseFiles("internal/templates/not-found.html"))
+		err = tmpl.Execute(w, nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		return
+	}
+
+	tmpl := template.Must(template.ParseFiles("internal/templates/url-click-counts.html"))
+
+	urlClickCounts := URLClickCounts{
+		ShortURL:   fullShortURL,
+		ClickCount: clickCount,
+	}
+	err = tmpl.Execute(w, urlClickCounts)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }

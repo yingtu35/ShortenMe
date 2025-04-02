@@ -6,10 +6,16 @@
   <title>ShortenMe</title>
 </head>
 <body>
-  <h1>ShortenMe - URL Shortener</h1>
+  <h1>ShortenMe</h1>
+  <h2>URL Shortener</h2>
   <form action="/shorten" method="post">
     <input type="url" name="url" placeholder="Enter your URL here" required>
     <button type="submit">Shorten Me!</button>
+  </form>
+  <h2>URL Click Counts</h2>
+  <form action="/click-counts" method="get">
+    <input type="url" name="shortURL" placeholder="Enter your short URL here" required>
+    <button type="submit">Get Click Counts</button>
   </form>
 </body>
 </html>
