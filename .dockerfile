@@ -28,7 +28,7 @@ WORKDIR /app
 COPY --from=builder /app/shortenMe .
 
 # Copy template files from the builder stage
-COPY --from=builder /app/internal/templates ./internal/templates
+COPY --from=builder /app/templates ./templates
 
 # Set proper permissions
 RUN chown -R appuser:appuser /app

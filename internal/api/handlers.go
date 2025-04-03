@@ -28,8 +28,12 @@ type URLClickCounts struct {
 	ClickCount int64
 }
 
+type NotFound struct {
+	ShortURL string
+}
+
 func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
-	tmpl := template.Must(template.ParseFiles("internal/templates/index.html"))
+	tmpl := template.Must(template.ParseFiles("templates/index.html"))
 
 	err := tmpl.Execute(w, nil)
 	if err != nil {
@@ -61,7 +65,7 @@ func (h *Handler) Shorten(w http.ResponseWriter, r *http.Request) {
 		ShortURL:    shortURL,
 	}
 
-	tmpl := template.Must(template.ParseFiles("internal/templates/shorten.html"))
+	tmpl := template.Must(template.ParseFiles("templates/shorten.html"))
 
 	err = tmpl.Execute(w, shortenedURL)
 	if err != nil {
@@ -83,8 +87,8 @@ func (h *Handler) Redirect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if originalURL == "" {
-		tmpl := template.Must(template.ParseFiles("internal/templates/not-found.html"))
-		err = tmpl.Execute(w, nil)
+		tmpl := template.Must(template.ParseFiles("templates/not-found.html"))
+		err = tmpl.Execute(w, NotFound{ShortURL: shortURL})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -109,8 +113,8 @@ func (h *Handler) URLClickCounts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if clickCount == -1 {
-		tmpl := template.Must(template.ParseFiles("internal/templates/not-found.html"))
-		err = tmpl.Execute(w, nil)
+		tmpl := template.Must(template.ParseFiles("templates/not-found.html"))
+		err = tmpl.Execute(w, NotFound{ShortURL: shortURL})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -118,7 +122,7 @@ func (h *Handler) URLClickCounts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmpl := template.Must(template.ParseFiles("internal/templates/url-click-counts.html"))
+	tmpl := template.Must(template.ParseFiles("templates/url-click-counts.html"))
 
 	urlClickCounts := URLClickCounts{
 		ShortURL:   fullShortURL,

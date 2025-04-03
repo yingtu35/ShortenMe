@@ -50,8 +50,13 @@ func main() {
 		w.Write([]byte("OK"))
 	})
 
+	// Serve favicon.ico directly
+	mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "templates/favicon.ico")
+	})
+
 	// Serve static files
-	fs := http.FileServer(http.Dir("internal/templates"))
+	fs := http.FileServer(http.Dir("templates"))
 	mux.Handle("/static/", http.StripPrefix("/static/", fs))
 
 	// API routes
