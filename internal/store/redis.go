@@ -138,3 +138,9 @@ func (s *RedisStore) GetClickCount(shortURL string) (int64, error) {
 
 	return urlData.ClickCount, nil
 }
+
+// Ping checks if the Redis connection is alive
+func (s *RedisStore) Ping() error {
+	ctx := context.Background()
+	return s.client.Ping(ctx).Err()
+}
