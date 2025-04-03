@@ -1,5 +1,5 @@
 # Use the official Go image
-FROM golang:1.22-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.22-alpine AS builder
 
 # Set the working directory in the container
 WORKDIR /app
@@ -14,10 +14,10 @@ RUN go mod download
 COPY . .
 
 # Build the application with additional flags for better security and performance
-RUN CGO_ENABLED=0 GOOS=linux go build -a -ldflags="-w -s" -o shortenMe cmd/app/main.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags="-w -s" -o shortenMe cmd/app/main.go
 
 # Use a smaller image for the runtime
-FROM alpine:3.19 AS runner
+FROM --platform=$TARGETPLATFORM alpine:3.19 AS runner
 
 # Create a non-root user
 RUN adduser -D -g '' appuser
@@ -27,8 +27,8 @@ WORKDIR /app
 # Copy the binary from the builder stage
 COPY --from=builder /app/shortenMe .
 
-# Copy any necessary config files or assets
-COPY --from=builder /app/config ./config
+# Copy template files from the builder stage
+COPY --from=builder /app/internal/templates ./internal/templates
 
 # Set proper permissions
 RUN chown -R appuser:appuser /app

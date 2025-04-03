@@ -16,10 +16,11 @@ import (
 )
 
 func main() {
-	// Load environment variables
-	err := godotenv.Load()
-	if err != nil {
-		log.Printf("Warning: Error loading .env file: %v", err)
+	// Only load .env file in development environment
+	if os.Getenv("APP_ENV") != "production" {
+		if err := godotenv.Load(); err != nil {
+			log.Printf("Warning: Error loading .env file: %v", err)
+		}
 	}
 
 	config := config.LoadConfig()
