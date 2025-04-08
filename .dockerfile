@@ -1,5 +1,5 @@
 # Use the official Go image
-FROM --platform=$BUILDPLATFORM golang:1.22-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.23-alpine AS base
 
 # Set the working directory in the container
 WORKDIR /app
@@ -10,8 +10,18 @@ COPY go.mod go.sum ./
 # Download the dependencies
 RUN go mod download
 
+# Install golangci-lint
+RUN go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.0.2
+
 # Copy rest of the source code to the container
 COPY . .
+
+FROM base AS lint
+
+# Run linter
+RUN golangci-lint run --timeout=5m
+
+FROM base AS builder
 
 # Build the application with additional flags for better security and performance
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags="-w -s" -o shortenMe cmd/app/main.go
