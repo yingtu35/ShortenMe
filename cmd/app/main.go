@@ -6,9 +6,11 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/joho/godotenv"
 	"github.com/yingtu35/ShortenMe/internal/api"
 	"github.com/yingtu35/ShortenMe/internal/config"
@@ -30,51 +32,69 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create Redis store: %v", err)
 	}
-	defer redisStore.Close()
+	defer func() {
+		if err := redisStore.Close(); err != nil {
+			log.Printf("Error closing Redis store: %v", err)
+		}
+	}()
 
-	// Create handler with store
-	handler := api.NewHandler(redisStore, *config)
+	// Get the absolute path to the templates directory
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("Failed to get working directory: %v", err)
+	}
+	templateDir := filepath.Join(wd, "templates")
 
-	// Set up routes
-	mux := http.NewServeMux()
+	// Create handler with store and template directory
+	handler := api.NewHandler(redisStore, *config, templateDir)
+
+	// Create static handler
+	staticHandler := api.NewStaticHandler(templateDir)
+
+	// Create chi router
+	r := chi.NewRouter()
 
 	// Health check endpoint
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		// Check Redis connection
 		if err := redisStore.Ping(); err != nil {
 			w.WriteHeader(http.StatusServiceUnavailable)
-			w.Write([]byte("Redis connection failed"))
+			if _, err := w.Write([]byte("Redis connection failed")); err != nil {
+				log.Printf("Error writing response: %v", err)
+			}
 			return
 		}
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		if _, err := w.Write([]byte("OK")); err != nil {
+			log.Printf("Error writing response: %v", err)
+		}
 	})
 
 	// Serve favicon.ico directly
-	mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "templates/favicon.ico")
+	r.Get("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(templateDir, "favicon.ico"))
 	})
 
 	// Serve static files
-	fs := http.FileServer(http.Dir("templates"))
-	mux.Handle("/static/", http.StripPrefix("/static/", fs))
+	fs := http.FileServer(http.Dir(templateDir))
+	r.Handle("/static/*", http.StripPrefix("/static/", fs))
 
 	// API routes
-	mux.HandleFunc("/shorten", handler.Shorten)
-	mux.HandleFunc("/click-counts", handler.URLClickCounts)
+	r.Post("/shorten", handler.Shorten)
+	r.Post("/click-counts", handler.URLClickCounts)
 
 	// Static pages
-	mux.HandleFunc("/terms", api.ServeTerms)
-	mux.HandleFunc("/privacy", api.ServePrivacy)
+	r.Get("/terms", staticHandler.ServeTerms)
+	r.Get("/privacy", staticHandler.ServePrivacy)
 
 	// This should be the last route as it catches all other paths
-	mux.HandleFunc("/{shortURL}", handler.Redirect)
-	mux.HandleFunc("/", handler.Home)
+	r.Get("/{shortURL}", handler.Redirect)
+	r.Get("/", handler.Home)
 
 	// Create server with timeouts
 	server := &http.Server{
 		Addr:         ":" + config.Port,
-		Handler:      mux,
+		Handler:      r,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  120 * time.Second,

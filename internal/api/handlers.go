@@ -10,12 +10,17 @@ import (
 )
 
 type Handler struct {
-	store  store.Store
-	config config.Config
+	store       store.Store
+	config      config.Config
+	templateDir string
 }
 
-func NewHandler(store store.Store, config config.Config) *Handler {
-	return &Handler{store: store, config: config}
+func NewHandler(store store.Store, config config.Config, templateDir string) *Handler {
+	return &Handler{
+		store:       store,
+		config:      config,
+		templateDir: templateDir,
+	}
 }
 
 type ShortenedURL struct {
@@ -33,7 +38,7 @@ type NotFound struct {
 }
 
 func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
-	tmpl := template.Must(template.ParseFiles("templates/index.html"))
+	tmpl := template.Must(template.ParseFiles(h.templateDir + "/index.html"))
 
 	err := tmpl.Execute(w, nil)
 	if err != nil {
@@ -65,7 +70,7 @@ func (h *Handler) Shorten(w http.ResponseWriter, r *http.Request) {
 		ShortURL:    shortURL,
 	}
 
-	tmpl := template.Must(template.ParseFiles("templates/shorten.html"))
+	tmpl := template.Must(template.ParseFiles(h.templateDir + "/shorten.html"))
 
 	err = tmpl.Execute(w, shortenedURL)
 	if err != nil {
@@ -87,7 +92,7 @@ func (h *Handler) Redirect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if originalURL == "" {
-		tmpl := template.Must(template.ParseFiles("templates/not-found.html"))
+		tmpl := template.Must(template.ParseFiles(h.templateDir + "/not-found.html"))
 		err = tmpl.Execute(w, NotFound{ShortURL: shortURL})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -113,7 +118,7 @@ func (h *Handler) URLClickCounts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if clickCount == -1 {
-		tmpl := template.Must(template.ParseFiles("templates/not-found.html"))
+		tmpl := template.Must(template.ParseFiles(h.templateDir + "/not-found.html"))
 		err = tmpl.Execute(w, NotFound{ShortURL: shortURL})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -122,7 +127,7 @@ func (h *Handler) URLClickCounts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmpl := template.Must(template.ParseFiles("templates/url-click-counts.html"))
+	tmpl := template.Must(template.ParseFiles(h.templateDir + "/url-click-counts.html"))
 
 	urlClickCounts := URLClickCounts{
 		ShortURL:   fullShortURL,

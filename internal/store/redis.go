@@ -10,6 +10,18 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+// TimeProvider defines an interface for getting the current time
+type TimeProvider interface {
+	Now() time.Time
+}
+
+// DefaultTimeProvider implements TimeProvider using the system clock
+type DefaultTimeProvider struct{}
+
+func (DefaultTimeProvider) Now() time.Time {
+	return time.Now()
+}
+
 type URLData struct {
 	OriginalURL string    `json:"original_url"`
 	CreatedAt   time.Time `json:"created_at"`
@@ -17,7 +29,8 @@ type URLData struct {
 }
 
 type RedisStore struct {
-	client *redis.Client
+	client       *redis.Client
+	timeProvider TimeProvider
 }
 
 func NewRedisStore() (*RedisStore, error) {
@@ -42,7 +55,10 @@ func NewRedisStore() (*RedisStore, error) {
 		return nil, fmt.Errorf("failed to connect to Redis: %w", err)
 	}
 
-	return &RedisStore{client: client}, nil
+	return &RedisStore{
+		client:       client,
+		timeProvider: DefaultTimeProvider{},
+	}, nil
 }
 
 func (s *RedisStore) Close() error {
@@ -50,6 +66,10 @@ func (s *RedisStore) Close() error {
 }
 
 func (s *RedisStore) CreateShortURL(originalURL string) (string, error) {
+	if originalURL == "" {
+		return "", fmt.Errorf("original URL is required")
+	}
+
 	ctx := context.Background()
 
 	// Get the next ID using Redis INCR
@@ -64,7 +84,7 @@ func (s *RedisStore) CreateShortURL(originalURL string) (string, error) {
 	// Create URL data
 	urlData := URLData{
 		OriginalURL: originalURL,
-		CreatedAt:   time.Now(),
+		CreatedAt:   s.timeProvider.Now(),
 		ClickCount:  0,
 	}
 
