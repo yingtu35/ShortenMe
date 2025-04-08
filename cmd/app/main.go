@@ -32,7 +32,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create Redis store: %v", err)
 	}
-	defer redisStore.Close()
+	defer func() {
+		if err := redisStore.Close(); err != nil {
+			log.Printf("Error closing Redis store: %v", err)
+		}
+	}()
 
 	// Get the absolute path to the templates directory
 	wd, err := os.Getwd()
@@ -55,11 +59,15 @@ func main() {
 		// Check Redis connection
 		if err := redisStore.Ping(); err != nil {
 			w.WriteHeader(http.StatusServiceUnavailable)
-			w.Write([]byte("Redis connection failed"))
+			if _, err := w.Write([]byte("Redis connection failed")); err != nil {
+				log.Printf("Error writing response: %v", err)
+			}
 			return
 		}
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		if _, err := w.Write([]byte("OK")); err != nil {
+			log.Printf("Error writing response: %v", err)
+		}
 	})
 
 	// Serve favicon.ico directly

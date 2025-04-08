@@ -1,0 +1,17 @@
+version: "2"
+linters:
+  enable-all: true
+
+run:
+  timeout: 5m
+  concurrency: 4
+
+issues:
+  exclude-use-default: false
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gosec
+    - path: vendor/
+      linters:
+        - all 
