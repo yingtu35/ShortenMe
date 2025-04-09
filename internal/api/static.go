@@ -25,3 +25,7 @@ func (h *StaticHandler) ServeTerms(w http.ResponseWriter, r *http.Request) {
 func (h *StaticHandler) ServePrivacy(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, h.templateDir+"/privacy.html")
 }
+
+func (h *StaticHandler) ServeStaticIcon(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, h.templateDir+"/shortenme-icon.png")
+}
