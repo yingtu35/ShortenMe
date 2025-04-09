@@ -87,6 +87,9 @@ func main() {
 	r.Get("/terms", staticHandler.ServeTerms)
 	r.Get("/privacy", staticHandler.ServePrivacy)
 
+	// image icon
+	r.Get("/shortenme-icon.png", staticHandler.ServeStaticIcon)
+
 	// This should be the last route as it catches all other paths
 	r.Get("/{shortURL}", handler.Redirect)
 	r.Get("/", handler.Home)

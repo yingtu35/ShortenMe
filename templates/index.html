@@ -3,21 +3,43 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ShortenMe</title>
+  <meta name="description" content="ShortenMe is a simple URL shortener that allows you to shorten long URLs and track click counts.">
+  <meta name="keywords" content="URL shortener, link shortener, URL shortening service, click tracking">
+  <meta name="author" content="Ying Tu">
+  <meta property="og:title" content="ShortenMe - URL Shortener">
+  <meta property="og:description" content="ShortenMe is a simple URL shortener that allows you to shorten long URLs and track click counts.">
+  <meta property="og:url" content="https://shortenme.link">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://shortenme.link/static/shortenme-icon.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ShortenMe - URL Shortener">
+  <meta name="twitter:description" content="ShortenMe is a simple URL shortener that allows you to shorten long URLs and track click counts.">
+  <meta name="twitter:image" content="https://shortenme.link/static/shortenme-icon.png">
+  <meta http-equiv="content-language" content="en">
+  <title>URL Shortener</title>
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
   <link rel="stylesheet" href="/static/styles.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-TJ7KGK2GRP"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-TJ7KGK2GRP');
+  </script>
 </head>
 <body>
   <h1>ShortenMe</h1>
   <h2>URL Shortener</h2>
-  <form action="/shorten" method="post">
-    <input type="url" name="url" placeholder="Enter your URL here" required>
-    <button type="submit" class="button">Shorten Me!</button>
+  <form action="/shorten" method="post" aria-label="Shorten URL form">
+    <input type="url" name="url" placeholder="Enter your URL here" required aria-label="URL input">
+    <button type="submit" class="button" aria-label="Shorten URL button">Shorten Me!</button>
   </form>
   <h2>URL Click Counts</h2>
-  <form action="/click-counts" method="post">
-    <input type="url" name="shortURL" placeholder="Enter your short URL here" required>
-    <button type="submit" class="button">Get Click Counts</button>
+  <form action="/click-counts" method="post" aria-label="URL Click Counts form">
+    <input type="url" name="shortURL" placeholder="Enter your short URL here" required aria-label="Short URL input">
+    <button type="submit" class="button" aria-label="Get Click Counts button">Get Click Counts</button>
   </form>
 
   <footer>
