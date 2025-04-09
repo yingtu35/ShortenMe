@@ -116,7 +116,7 @@ func TestHome(t *testing.T) {
 	// Since we're testing a template, we can check for specific content
 	// that should be present in the rendered template
 	expected := []string{
-		"<title>ShortenMe</title>",
+		"<title>URL Shortener</title>",
 		"<form",
 		"url",
 		"submit",
