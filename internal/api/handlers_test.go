@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -412,6 +413,114 @@ func TestURLClickCounts(t *testing.T) {
 			for _, content := range tt.expectedContent {
 				if !strings.Contains(body, content) {
 					t.Errorf("handler returned unexpected body: missing %v", content)
+				}
+			}
+		})
+	}
+}
+
+func TestAPIShorten(t *testing.T) {
+	// Get template directory
+	templateDir := getTemplateDir(t)
+
+	// Create a test config
+	cfg := config.Config{
+		BaseURL: "http://localhost:8080",
+	}
+
+	tests := []struct {
+		name            string
+		url             string
+		mockShortURL    string
+		mockError       error
+		expectedStatus  int
+		expectedContent map[string]string
+	}{
+		{
+			name:           "successful shortening",
+			url:            "https://example.com",
+			mockShortURL:   "http://localhost:8080/abc123",
+			mockError:      nil,
+			expectedStatus: http.StatusOK,
+			expectedContent: map[string]string{
+				"original_url": "https://example.com",
+				"short_url":    "http://localhost:8080/abc123",
+			},
+		},
+		{
+			name:           "empty URL",
+			url:            "",
+			mockShortURL:   "",
+			mockError:      nil,
+			expectedStatus: http.StatusBadRequest,
+			expectedContent: map[string]string{
+				"error": "URL is required",
+			},
+		},
+		{
+			name:           "invalid URL",
+			url:            "invalid-url",
+			mockShortURL:   "",
+			mockError:      nil,
+			expectedStatus: http.StatusBadRequest,
+			expectedContent: map[string]string{
+				"error": "Invalid URL",
+			},
+		},
+		{
+			name:           "store error",
+			url:            "https://example.com",
+			mockShortURL:   "",
+			mockError:      errors.New("store error"),
+			expectedStatus: http.StatusInternalServerError,
+			expectedContent: map[string]string{
+				"error": "store error",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create a mock store with the test case behavior
+			mockStore := &mockStore{
+				createShortURLFunc: func(url string) (string, error) {
+					return tt.mockShortURL, tt.mockError
+				},
+			}
+
+			// Create a handler with mock store and config
+			handler := NewHandler(mockStore, cfg, templateDir)
+
+			// Create a test request body
+			requestBody := map[string]string{"url": tt.url}
+			body, _ := json.Marshal(requestBody)
+
+			// Create a test request
+			req := httptest.NewRequest("POST", "/api/shorten", bytes.NewBuffer(body))
+			req.Header.Set("Content-Type", "application/json")
+
+			// Create a response recorder
+			rr := httptest.NewRecorder()
+
+			// Call the handler
+			handler.APIShorten(rr, req)
+
+			// Check the status code
+			if status := rr.Code; status != tt.expectedStatus {
+				t.Errorf("handler returned wrong status code: got %v want %v",
+					status, tt.expectedStatus)
+			}
+
+			// Check the response body
+			var responseBody map[string]string
+			if err := json.Unmarshal(rr.Body.Bytes(), &responseBody); err != nil {
+				t.Fatalf("failed to parse response body: %v", err)
+			}
+
+			for key, expectedValue := range tt.expectedContent {
+				if value, exists := responseBody[key]; !exists || value != expectedValue {
+					t.Errorf("handler returned unexpected body: key %v, got %v want %v",
+						key, value, expectedValue)
 				}
 			}
 		})
