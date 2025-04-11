@@ -1,8 +1,10 @@
 package api
 
 import (
+	"encoding/json"
 	"html/template"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/yingtu35/ShortenMe/internal/config"
@@ -37,6 +39,15 @@ type NotFound struct {
 	ShortURL string
 }
 
+// IsValidURL checks if the given string is a valid URL
+func IsValidURL(input string) bool {
+	parsedURL, err := url.ParseRequestURI(input)
+	if err != nil || parsedURL.Scheme == "" || parsedURL.Host == "" {
+		return false
+	}
+	return true
+}
+
 func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(template.ParseFiles(h.templateDir + "/index.html"))
 
@@ -56,6 +67,11 @@ func (h *Handler) Shorten(w http.ResponseWriter, r *http.Request) {
 	url := r.PostFormValue("url")
 	if url == "" {
 		http.Error(w, "URL is required", http.StatusBadRequest)
+		return
+	}
+
+	if !IsValidURL(url) {
+		http.Error(w, "Invalid URL", http.StatusBadRequest)
 		return
 	}
 
@@ -137,5 +153,53 @@ func (h *Handler) URLClickCounts(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+}
+
+func (h *Handler) APIShorten(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		h.respondWithJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "Method not allowed"})
+		return
+	}
+
+	var requestBody struct {
+		URL string `json:"url"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
+		h.respondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
+		return
+	}
+
+	url := requestBody.URL
+	if url == "" {
+		h.respondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "URL is required"})
+		return
+	}
+
+	if !IsValidURL(url) {
+		h.respondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid URL"})
+		return
+	}
+
+	shortURL, err := h.store.CreateShortURL(url)
+	if err != nil {
+		h.respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return
+	}
+
+	response := map[string]string{
+		"original_url": url,
+		"short_url":    shortURL,
+	}
+
+	h.respondWithJSON(w, http.StatusOK, response)
+}
+
+func (h *Handler) respondWithJSON(w http.ResponseWriter, statusCode int, payload map[string]string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	if err := json.NewEncoder(w).Encode(payload); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }

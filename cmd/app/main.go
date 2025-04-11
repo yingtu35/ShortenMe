@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
 	"github.com/yingtu35/ShortenMe/internal/api"
 	"github.com/yingtu35/ShortenMe/internal/config"
@@ -54,6 +55,13 @@ func main() {
 	// Create chi router
 	r := chi.NewRouter()
 
+	// Add CORS middleware
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins: []string{"chrome-extension://*"},
+		AllowedMethods: []string{"POST", "OPTIONS"},
+		AllowedHeaders: []string{"Content-Type", "Authorization"},
+	}))
+
 	// Health check endpoint
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		// Check Redis connection
@@ -78,6 +86,9 @@ func main() {
 	// Serve static files
 	fs := http.FileServer(http.Dir(templateDir))
 	r.Handle("/static/*", http.StripPrefix("/static/", fs))
+
+	// API routes for Chrome extension
+	r.Post("/api/shorten", handler.APIShorten)
 
 	// API routes
 	r.Post("/shorten", handler.Shorten)
