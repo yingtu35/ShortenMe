@@ -8,6 +8,8 @@
 
 A FREE URL shortener app built with Go. Turn your long URLs into short, memorable links.
 
+<img src="./assets/home.png" alt="ShortenMe Home Page"/>
+
 ## Features
 
 - 🚀 Fast and lightweight
@@ -17,6 +19,11 @@ A FREE URL shortener app built with Go. Turn your long URLs into short, memorabl
 - 🎨 Clean and simple web interface
 - 🐳 Docker support
 - ⚡ Redis-powered storage
+
+## Architecture
+<img src="./assets/architecture.png" alt="ShortenMe Architecture"/>
+
+Credits to [GitDiagram](https://gitdiagram.com/) for the architecture diagram.
 
 ## Prerequisites
 
