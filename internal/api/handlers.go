@@ -59,6 +59,7 @@ func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Shorten(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -92,6 +93,12 @@ func (h *Handler) Shorten(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	select {
+	case <-ctx.Done():
+		return
+	default:
 	}
 }
 
@@ -157,6 +164,7 @@ func (h *Handler) URLClickCounts(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) APIShorten(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	if r.Method != http.MethodPost {
 		h.respondWithJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "Method not allowed"})
 		return
@@ -194,6 +202,12 @@ func (h *Handler) APIShorten(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.respondWithJSON(w, http.StatusOK, response)
+
+	select {
+	case <-ctx.Done():
+		return
+	default:
+	}
 }
 
 func (h *Handler) respondWithJSON(w http.ResponseWriter, statusCode int, payload map[string]string) {

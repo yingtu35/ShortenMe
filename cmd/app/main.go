@@ -11,7 +11,9 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/go-chi/httprate"
 	"github.com/joho/godotenv"
 	"github.com/yingtu35/ShortenMe/internal/api"
 	"github.com/yingtu35/ShortenMe/internal/config"
@@ -55,6 +57,10 @@ func main() {
 	// Create chi router
 	r := chi.NewRouter()
 
+	// Middleware for logging
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+
 	// Add CORS middleware
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins: []string{"chrome-extension://*"},
@@ -62,48 +68,62 @@ func main() {
 		AllowedHeaders: []string{"Content-Type", "Authorization"},
 	}))
 
-	// Health check endpoint
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		// Check Redis connection
-		if err := redisStore.Ping(); err != nil {
-			w.WriteHeader(http.StatusServiceUnavailable)
-			if _, err := w.Write([]byte("Redis connection failed")); err != nil {
+	// Group shorten url routes and apply rate limiting middleware
+	r.Group(func(r chi.Router) {
+		r.Use(httprate.LimitByIP(10, 1*time.Minute)) // 10 requests per minute
+		r.Use(middleware.NoCache)
+		r.Use(middleware.Timeout(60 * time.Second))
+
+		r.Post("/api/shorten", handler.APIShorten)
+		r.Post("/shorten", handler.Shorten)
+	})
+
+	// Serve favicon.ico with higher rate limit
+	r.Group(func(r chi.Router) {
+		r.Use(httprate.LimitByIP(200, 1*time.Minute)) // 200 requests per minute
+
+		r.Get("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, filepath.Join(templateDir, "favicon.ico"))
+		})
+	})
+
+	// Group the remaining routes with more lenient rate limiting
+	r.Group(func(r chi.Router) {
+		r.Use(httprate.LimitByIP(100, 1*time.Minute)) // 100 requests per minute
+
+		// Serve static files
+		fs := http.FileServer(http.Dir(templateDir))
+		r.Handle("/static/*", http.StripPrefix("/static/", fs))
+
+		// Health check endpoint
+		r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+			// Check Redis connection
+			if err := redisStore.Ping(); err != nil {
+				w.WriteHeader(http.StatusServiceUnavailable)
+				if _, err := w.Write([]byte("Redis connection failed")); err != nil {
+					log.Printf("Error writing response: %v", err)
+				}
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			if _, err := w.Write([]byte("OK")); err != nil {
 				log.Printf("Error writing response: %v", err)
 			}
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-		if _, err := w.Write([]byte("OK")); err != nil {
-			log.Printf("Error writing response: %v", err)
-		}
+		})
+
+		r.Post("/click-counts", handler.URLClickCounts)
+
+		// Static pages
+		r.Get("/terms", staticHandler.ServeTerms)
+		r.Get("/privacy", staticHandler.ServePrivacy)
+
+		// image icon
+		r.Get("/shortenme-icon.png", staticHandler.ServeStaticIcon)
+
+		// This should be the last route as it catches all other paths
+		r.Get("/{shortURL}", handler.Redirect)
+		r.Get("/", handler.Home)
 	})
-
-	// Serve favicon.ico directly
-	r.Get("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, filepath.Join(templateDir, "favicon.ico"))
-	})
-
-	// Serve static files
-	fs := http.FileServer(http.Dir(templateDir))
-	r.Handle("/static/*", http.StripPrefix("/static/", fs))
-
-	// API routes for Chrome extension
-	r.Post("/api/shorten", handler.APIShorten)
-
-	// API routes
-	r.Post("/shorten", handler.Shorten)
-	r.Post("/click-counts", handler.URLClickCounts)
-
-	// Static pages
-	r.Get("/terms", staticHandler.ServeTerms)
-	r.Get("/privacy", staticHandler.ServePrivacy)
-
-	// image icon
-	r.Get("/shortenme-icon.png", staticHandler.ServeStaticIcon)
-
-	// This should be the last route as it catches all other paths
-	r.Get("/{shortURL}", handler.Redirect)
-	r.Get("/", handler.Home)
 
 	// Create server with timeouts
 	server := &http.Server{
