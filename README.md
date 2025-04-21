@@ -29,6 +29,11 @@ The ShortenMe Chrome extension allows you to shorten URLs directly from your bro
 
 Credits to [GitDiagram](https://gitdiagram.com/) for the architecture diagram.
 
+## Architecture
+<img src="./assets/architecture.png" alt="ShortenMe Architecture"/>
+
+Credits to [GitDiagram](https://gitdiagram.com/) for the architecture diagram.
+
 ## Prerequisites
 
 - Go 1.23 or higher
