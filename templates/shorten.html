@@ -30,7 +30,7 @@
   </div>
   <p>Original URL: <a href="{{.OriginalURL}}" target="_blank">{{.OriginalURL}}</a></p>
 
-  <p>Shorten another URL <a href="/" class="button">here</a></p>
+  <p><a href="/" class="button">Shorten another URL here</a></p>
 
   <footer>
     <p>&copy; 2025 ShortenMe | Created by <a href="https://github.com/yingtu35" target="_blank">Ying Tu</a></p>
@@ -46,8 +46,10 @@
       // change button text to "Copied!"
       const copyButton = document.querySelector('#copy-button');
       copyButton.textContent = 'Copied!';
+      copyButton.disabled = true;
       setTimeout(() => {
         copyButton.textContent = 'Copy URL';
+        copyButton.disabled = false;  
       }, 2000);
     }
   </script>
