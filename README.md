@@ -10,6 +10,9 @@ A FREE URL shortener app built with Go. Turn your long URLs into short, memorabl
 
 <img src="./assets/home.png" alt="ShortenMe Home Page"/>
 
+## Chrome Extension
+The ShortenMe Chrome extension allows you to shorten URLs directly from your browser. You can find it in the [Chrome Web Store](https://chromewebstore.google.com/detail/url-shortener-shortenme/eiojbnimgocofgaecddahbbneamkcedi).
+
 ## Features
 
 - 🚀 Fast and lightweight
@@ -19,6 +22,7 @@ A FREE URL shortener app built with Go. Turn your long URLs into short, memorabl
 - 🎨 Clean and simple web interface
 - 🐳 Docker support
 - ⚡ Redis-powered storage
+- 🔗 Chrome extension support
 
 ## Architecture
 <img src="./assets/architecture.png" alt="ShortenMe Architecture"/>
